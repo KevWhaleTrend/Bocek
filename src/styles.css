@@ -56,3 +56,109 @@
     .btn.secondary{background:#303b30;border-color:#596553;color:#f0f3eb}
     .progress-lock{display:grid;grid-template-columns:auto 1fr auto;align-items:center;gap:18px;margin:0 0 14px;padding:22px 24px;border:1px solid #5a684f;border-radius:16px;background:linear-gradient(120deg,#293528,#222d22);box-shadow:0 14px 36px #0003}.lock-mark{display:grid;place-items:center;width:44px;height:44px;border:1px solid #778568;border-radius:13px;color:#d5e3b6;font-weight:700;font-size:19px}.progress-lock h2{margin:8px 0 5px;font-size:19px}.progress-lock p{max-width:660px;margin:0;color:#d0d8cc;font-size:12px;line-height:1.55}.progress-lock .progress-card-label{color:#d0ddaF}.progress-lock .btn{white-space:nowrap}
     @media(max-width:700px){.progress-lock{grid-template-columns:auto 1fr;padding:17px;gap:13px}.progress-lock .btn{grid-column:1/-1;width:100%}.progress-lock h2{font-size:16px}}
+
+/* Responsive layout refinements */
+@media (max-width: 900px) {
+  .shell { max-width: 760px; padding-right: 22px; padding-left: 22px; }
+  .setup { grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 12px; }
+  .pick { padding: 16px; }
+  .char-preview .avatar { width: 78px; height: 78px; }
+  .matchup-notes { grid-template-columns: 1fr; }
+  .board { gap: 12px; padding: 17px; }
+  .controls .btn { flex: 1 1 170px; }
+}
+
+@media (max-width: 700px) {
+  .shell { width: 100%; max-width: 560px; padding: 16px 16px 30px; }
+  .top { align-items: center; gap: 10px; margin-bottom: 28px; }
+  .brand { min-width: 0; gap: 8px; font-size: 11px; letter-spacing: .09em; }
+  .brand-logo { width: 34px; height: 34px; border-radius: 10px; }
+  .top-actions { max-width: 62%; }
+  .top-actions .x-button { max-width: 100%; }
+  .top-actions .pill { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 7px; }
+  .hero { gap: 8px; margin-bottom: 21px; }
+  .hero h1 { font-size: clamp(36px, 10vw, 54px); }
+  .hero p { max-width: 34ch; font-size: 13px; line-height: 1.5; }
+  .eyebrow { font-size: 9px; letter-spacing: .12em; }
+  .setup { grid-template-columns: minmax(0, 1fr); gap: 9px; }
+  .pick { padding: 15px; }
+  .pick-head { margin-bottom: 13px; }
+  .char-preview { gap: 11px; margin-top: 14px; }
+  .char-preview .avatar { width: 76px; height: 76px; }
+  .char-name { font-size: 17px; }
+  .char-role { line-height: 1.5; }
+  .matchup-notes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .vs { line-height: 1; padding: 2px 0; }
+  .difficulty-panel { grid-template-columns: minmax(0, 1fr); padding: 13px; }
+  .launch { margin: 14px 0 24px; }
+  .launch .btn { width: 100%; min-height: 48px; }
+  .board { grid-template-columns: minmax(0, 1fr); gap: 13px; padding: 15px; }
+  .center { order: 0; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 6px; min-width: 0; }
+  .round { margin: 0; text-align: left; }
+  .versus { margin: 0; }
+  .turn { text-align: right; }
+  .difficulty-tag { grid-column: 1 / -1; margin-top: 1px; }
+  .fighter.right { text-align: left; }
+  .right .fighter-top { justify-content: flex-start; }
+  .right .hp-meta { flex-direction: row; }
+  .right .effects { justify-content: flex-start; }
+  .fighter .avatar { width: 58px; height: 58px; }
+  .controls { display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .controls .btn { width: 100%; min-height: 46px; }
+  .log { max-height: 260px; padding: 13px; }
+  .log-entry { font-size: 11px; }
+  .result { padding: 14px 4px; font-size: 19px; }
+  .utility, .thesis { margin-top: 20px; padding: 16px; }
+  .utility-heading h2 { font-size: clamp(24px, 7vw, 34px); }
+  .utility-grid, .thesis-grid { grid-template-columns: minmax(0, 1fr); gap: 9px; }
+  .utility-card, .thesis-card { padding: 14px; }
+  .utility-card p, .thesis-card p { font-size: 12px; }
+  .progress-dashboard { gap: 9px; }
+  .progress-card-label { font-size: 8px; letter-spacing: .08em; }
+  .progress-card-label span { font-size: 7px; }
+  .profile-details > summary { align-items: flex-start; line-height: 1.5; }
+  .profile-details > summary span { text-align: right; }
+  .mastery-grid, .achievement-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .profile-inner h3 { align-items: flex-start; flex-direction: column; gap: 3px; }
+  .x-notice { max-width: none; margin: -17px 0 20px; }
+  .x-modal-backdrop { padding: 12px; }
+  .x-modal { max-height: min(88dvh, 720px); overflow-y: auto; }
+  .foot { font-size: 8px; line-height: 1.5; }
+}
+
+@media (max-width: 420px) {
+  .shell { padding-right: 12px; padding-left: 12px; }
+  .top { align-items: flex-start; }
+  .top-actions { gap: 5px; }
+  .x-button { min-height: 33px; padding: 0 8px; font-size: 9px; }
+  .hero h1 { font-size: 36px; }
+  .pick { padding: 13px; }
+  .side-label { font-size: 8px; letter-spacing: .08em; }
+  .stats { gap: 6px; }
+  .stat span { font-size: 7px; }
+  .matchup-notes { gap: 6px; }
+  .matchup-notes > div { padding: 8px; }
+  .matchup-notes p { font-size: 9px; }
+  .mastery-grid, .achievement-grid { grid-template-columns: minmax(0, 1fr); }
+  .season-stats { gap: 5px; }
+  .season-stats > div { padding: 8px 5px; }
+  .season-stats span { font-size: 7px; }
+  .profile-statline span { font-size: 7px; }
+  .thesis-disclosure { font-size: 9px; }
+  .foot { flex-direction: column; gap: 5px; }
+}
+
+@media (max-width: 350px) {
+  .brand { font-size: 9px; }
+  .brand-logo { width: 30px; height: 30px; }
+  .top-actions { max-width: 65%; }
+  .top-actions .pill { letter-spacing: 0; }
+  .hero h1 { font-size: 32px; }
+  .center { grid-template-columns: 1fr auto 1fr; }
+  .round, .turn { font-size: 8px; }
+  .season-foot { font-size: 7px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+}
