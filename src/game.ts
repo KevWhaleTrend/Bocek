@@ -40,14 +40,14 @@ const damage = (target: Combatant, amount: number, bypassEvasion = false, pierce
 
 const withWinner = (battle: Battle): Battle => {
   const { player, enemy } = battle;
-  if (player.currentHp <= 0 && enemy.currentHp <= 0) return { ...battle, finished: true, winner: 'Dövüş beraberlikle bitti.', winnerSide: 'draw' };
-  if (player.currentHp <= 0) return { ...battle, finished: true, winner: `${enemy.name} kazandı!`, winnerSide: 'enemy' };
-  if (enemy.currentHp <= 0) return { ...battle, finished: true, winner: `${player.name} kazandı!`, winnerSide: 'player' };
+  if (player.currentHp <= 0 && enemy.currentHp <= 0) return { ...battle, finished: true, winner: 'The battle ended in a draw.', winnerSide: 'draw' };
+  if (player.currentHp <= 0) return { ...battle, finished: true, winner: `${enemy.name} wins!`, winnerSide: 'enemy' };
+  if (enemy.currentHp <= 0) return { ...battle, finished: true, winner: `${player.name} wins!`, winnerSide: 'player' };
   if (battle.round > 20) {
     const playerRatio = player.currentHp / player.hp;
     const enemyRatio = enemy.currentHp / enemy.hp;
     const draw = playerRatio === enemyRatio;
-    const winner = draw ? '20 tur sonunda beraberlik!' : `${playerRatio > enemyRatio ? player.name : enemy.name} HP oranıyla kazandı!`;
+    const winner = draw ? 'Draw after 20 turns!' : `${playerRatio > enemyRatio ? player.name : enemy.name} wins on remaining HP!`;
     return { ...battle, finished: true, winner, winnerSide: draw ? 'draw' : playerRatio > enemyRatio ? 'player' : 'enemy' };
   }
   return battle;
@@ -68,7 +68,7 @@ export function startBattle(player: Character, enemy: Character, difficulty: Bot
     winner: null,
     winnerSide: null,
   };
-  battle = addLog(battle, `${player.name} ve ${enemy.name} arenaya çıktı. ${playerFirst ? `${player.name} ilk hamleyi alıyor.` : `${enemy.name} daha hızlı; ilk hamle onda.`}`);
+  battle = addLog(battle, `${player.name} and ${enemy.name} enter the arena. ${playerFirst ? `${player.name} makes the first move.` : `${enemy.name} is faster and moves first.`}`);
   return battle;
 }
 
@@ -83,17 +83,17 @@ function applySpecial(battle: Battle, actor: 'player' | 'enemy'): Battle {
       [target, dealt] = damage(target, 7);
       if (dealt > 0) target = { ...target, poison: 3, slow: 2 };
       message = dealt > 0
-        ? `${source.name} Venom Strike kullandı: ${dealt} hasar, zehir ve yavaşlatma.`
-        : `${target.name} hızla Venom Strike'tan sıyrıldı.`;
+        ? `${source.name} uses Venom Strike: ${dealt} damage, poison, and slow.`
+        : `${target.name} swiftly dodges Venom Strike.`;
       break;
     }
     case 'xylith':
       source = { ...source, dodge: true };
-      message = `${source.name} Phantom Leap ile kaçışa hazırlandı.`;
+      message = `${source.name} prepares to evade with Phantom Leap.`;
       break;
     case 'xarok':
       source = { ...source, armor: 2 };
-      message = `${source.name} Iron Carapace ile kabuğunu güçlendirdi.`;
+      message = `${source.name} reinforces its shell with Iron Carapace.`;
       break;
     case 'xyra': {
       let dealt: number;
@@ -101,8 +101,8 @@ function applySpecial(battle: Battle, actor: 'player' | 'enemy'): Battle {
       const controlled = dealt > 0 && !target.stunned;
       if (controlled) target = { ...target, stunned: true };
       message = dealt === 0
-        ? `${target.name} hızla Web Snare'den sıyrıldı.`
-        : `${source.name} Web Snare ile ${dealt} hasar verdi${controlled ? ' ve rakibin eylemini kesti.' : '.'}`;
+        ? `${target.name} swiftly dodges Web Snare.`
+        : `${source.name} deals ${dealt} damage with Web Snare${controlled ? ' and interrupts the opponent.' : '.'}`;
       break;
     }
     case 'xenith': {
@@ -110,7 +110,7 @@ function applySpecial(battle: Battle, actor: 'player' | 'enemy'): Battle {
       [target, dealt] = damage(target, 8);
       const healed = Math.min(source.hp - source.currentHp, Math.floor(dealt * 0.65));
       source = { ...source, currentHp: source.currentHp + healed };
-      message = `${source.name} Blood Drain ile ${dealt} hasar verdi ve ${healed} HP kazandı.`;
+      message = `${source.name} deals ${dealt} damage with Blood Drain and restores ${healed} HP.`;
       break;
     }
     case 'xull': {
@@ -120,7 +120,7 @@ function applySpecial(battle: Battle, actor: 'player' | 'enemy'): Battle {
         [target, dealt] = damage(target, 4);
         hits.push(dealt);
       }
-      message = `${source.name} Swarm Overload: ${hits.length} vuruş (${hits.join(' + ')}).`;
+      message = `${source.name} uses Swarm Overload: ${hits.length} hits (${hits.join(' + ')}).`;
       break;
     }
     case 'xelthar': {
@@ -128,8 +128,8 @@ function applySpecial(battle: Battle, actor: 'player' | 'enemy'): Battle {
       let dealt: number;
       [target, dealt] = damage(target, critical ? 16 : 11, false, true);
       message = dealt === 0
-        ? `${target.name} hızla Prism Beam'den kaçtı.`
-        : `${source.name} Prism Beam ile ${dealt} hasar verdi${critical ? ' — kritik vuruş!' : '.'}`;
+        ? `${target.name} swiftly dodges Prism Beam.`
+        : `${source.name} deals ${dealt} damage with Prism Beam${critical ? ' — critical hit!' : '.'}`;
       break;
     }
     case 'xyvora': {
@@ -138,7 +138,8 @@ function applySpecial(battle: Battle, actor: 'player' | 'enemy'): Battle {
       const downOptions = stats.filter((stat) => stat !== up);
       const down = downOptions[Math.floor(Math.random() * downOptions.length)];
       source = { ...source, chaos: { up, down, turns: 3 } };
-      message = `${source.name} Chaos Shift: ${up} +5, ${down} −1 (3 tur).`;
+      const labels: Record<StatName, string> = { attack: 'Attack', defense: 'Defense', speed: 'Speed' };
+      message = `${source.name} uses Chaos Shift: ${labels[up]} +5, ${labels[down]} −1 (3 turns).`;
       break;
     }
   }
@@ -153,7 +154,7 @@ export function playerAction(battle: Battle, special: boolean): Battle {
   let target = next.enemy;
   if (actor.stunned) {
     next = { ...next, player: { ...actor, stunned: false } };
-    return addLog(next, `${actor.name} ağlara takıldı; bu tur hamle yapamıyor.`);
+    return addLog(next, `${actor.name} is caught in the web and cannot move this turn.`);
   }
   if (special && actor.cooldownLeft > 0) return battle;
   if (special) next = applySpecial(next, 'player');
@@ -161,7 +162,7 @@ export function playerAction(battle: Battle, special: boolean): Battle {
     let dealt: number;
     [target, dealt] = damage(target, effectiveStat(actor, 'attack') + 2);
     next = { ...next, enemy: target };
-    next = addLog(next, dealt === 0 ? `${target.name} hızla saldırıdan sıyrıldı.` : `${actor.name} temel saldırı yaptı: ${target.name} ${dealt} hasar aldı.`);
+    next = addLog(next, dealt === 0 ? `${target.name} swiftly dodges the attack.` : `${actor.name} lands a basic attack: ${target.name} takes ${dealt} damage.`);
   }
   return withWinner(next);
 }
@@ -216,7 +217,7 @@ export function enemyTurn(battle: Battle, advanceRound = true): Battle {
   if (actor.stunned) {
     actor = { ...actor, stunned: false };
     next = { ...next, enemy: actor };
-    next = addLog(next, `${actor.name} ağa takıldı; hamlesi iptal oldu.`);
+    next = addLog(next, `${actor.name} is caught in the web; its move is canceled.`);
   } else {
     const useSpecial = computerChoosesSpecial(actor, target, battle.difficulty);
     if (useSpecial) next = applySpecial(next, 'enemy');
@@ -227,19 +228,19 @@ export function enemyTurn(battle: Battle, advanceRound = true): Battle {
         let counter: number;
         [actor, counter] = damage(actor, 7);
         next = { ...next, enemy: actor, player: target };
-        next = addLog(next, `${target.name} saldırıdan sıyrıldı ve ${counter} hasarlı karşı saldırı yaptı!`, 'special');
+        next = addLog(next, `${target.name} dodges the attack and counters for ${counter} damage!`, 'special');
       } else {
         let dealt: number;
         [target, dealt] = damage(target, Math.ceil((effectiveStat(actor, 'attack') + 2) * 0.5), true);
         next = { ...next, player: target };
-        next = addLog(next, `${target.name} kaçamadı; Phantom Leap darbeyi hafifletti ve ${dealt} hasar aldı.`);
+        next = addLog(next, `${target.name} fails to dodge, but Phantom Leap softens the blow to ${dealt} damage.`);
       }
     } else {
       const attack = effectiveStat(actor, 'attack');
       let dealt: number;
       [target, dealt] = damage(target, attack + 2);
       next = { ...next, player: target };
-      next = addLog(next, dealt === 0 ? `${target.name} hızla ${actor.name}'in saldırısından sıyrıldı.` : `${actor.name} temel saldırı yaptı: ${dealt} hasar.`);
+      next = addLog(next, dealt === 0 ? `${target.name} swiftly dodges ${actor.name}'s attack.` : `${actor.name} lands a basic attack for ${dealt} damage.`);
     }
   }
 
@@ -247,8 +248,8 @@ export function enemyTurn(battle: Battle, advanceRound = true): Battle {
   let enemyPoison: number;
   [next.player, playerPoison] = tick(next.player);
   [next.enemy, enemyPoison] = tick(next.enemy);
-  if (playerPoison) next = addLog(next, `${next.player.name} zehirden ${playerPoison} hasar aldı.`, 'damage');
-  if (enemyPoison) next = addLog(next, `${next.enemy.name} zehirden ${enemyPoison} hasar aldı.`, 'damage');
+  if (playerPoison) next = addLog(next, `${next.player.name} takes ${playerPoison} poison damage.`, 'damage');
+  if (enemyPoison) next = addLog(next, `${next.enemy.name} takes ${enemyPoison} poison damage.`, 'damage');
   if (advanceRound) next = { ...next, round: next.round + 1 };
   return withWinner(next);
 }

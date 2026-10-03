@@ -76,18 +76,18 @@ export interface MatchProgressResult {
 }
 
 export const achievements = [
-  { id: 'first-victory', title: 'First Blood', description: 'İlk maçını kazan.', goal: '1 galibiyet' },
-  { id: 'xerion-10', title: 'Venomous', description: 'Xerion ile 10 maç kazan.', goal: '10 Xerion galibiyeti' },
-  { id: 'xylith-10', title: 'Ghost Step', description: 'Xylith ile 10 maç kazan.', goal: '10 Xylith galibiyeti' },
-  { id: 'xarok-20', title: 'The Wall', description: 'Xarok ile 20 maç kazan.', goal: '20 Xarok galibiyeti' },
-  { id: 'xenith-10', title: 'Blood Pact', description: 'Xenith ile 10 maç kazan.', goal: '10 Xenith galibiyeti' },
-  { id: 'xull-10', title: 'Swarm Commander', description: 'Xull ile 10 maç kazan.', goal: '10 Xull galibiyeti' },
-  { id: 'xelthar-10', title: 'Prism Master', description: 'Xel’thar ile 10 maç kazan.', goal: '10 Xel’thar galibiyeti' },
-  { id: 'xyvora-10', title: 'Chaos Agent', description: 'Xyvora ile 10 maç kazan.', goal: '10 Xyvora galibiyeti' },
-  { id: 'untouchable-win', title: 'Flawless Victory', description: 'Hiç hasar almadan bir maç kazan.', goal: 'Tam HP ile galibiyet' },
-  { id: 'veteran-100', title: 'Veteran', description: '100 maç tamamla.', goal: '100 maç' },
-  { id: 'streak-5', title: 'Win Streak', description: 'Üst üste 5 maç kazan.', goal: '5 maçlık seri' },
-  { id: 'specialist-25', title: 'Ability Specialist', description: '25 özel yetenek kullan.', goal: '25 yetenek kullanımı' },
+  { id: 'first-victory', title: 'First Blood', description: 'Win your first match.', goal: '1 win' },
+  { id: 'xerion-10', title: 'Venomous', description: 'Win 10 matches with Xerion.', goal: '10 Xerion wins' },
+  { id: 'xylith-10', title: 'Ghost Step', description: 'Win 10 matches with Xylith.', goal: '10 Xylith wins' },
+  { id: 'xarok-20', title: 'The Wall', description: 'Win 20 matches with Xarok.', goal: '20 Xarok wins' },
+  { id: 'xenith-10', title: 'Blood Pact', description: 'Win 10 matches with Xenith.', goal: '10 Xenith wins' },
+  { id: 'xull-10', title: 'Swarm Commander', description: 'Win 10 matches with Xull.', goal: '10 Xull wins' },
+  { id: 'xelthar-10', title: 'Prism Master', description: 'Win 10 matches with Xel’thar.', goal: '10 Xel’thar wins' },
+  { id: 'xyvora-10', title: 'Chaos Agent', description: 'Win 10 matches with Xyvora.', goal: '10 Xyvora wins' },
+  { id: 'untouchable-win', title: 'Flawless Victory', description: 'Win a match without taking damage.', goal: 'Win at full HP' },
+  { id: 'veteran-100', title: 'Veteran', description: 'Complete 100 matches.', goal: '100 matches' },
+  { id: 'streak-5', title: 'Win Streak', description: 'Win 5 matches in a row.', goal: '5-match streak' },
+  { id: 'specialist-25', title: 'Ability Specialist', description: 'Use 25 special abilities.', goal: '25 ability uses' },
 ] as const;
 
 const characterDailyMissions = [
@@ -126,12 +126,12 @@ function dailyQuestSet(date: string): DailyQuest[] {
   const mission = characterDailyMissions[seed % characterDailyMissions.length]!;
   const rotateCharacter = Math.floor(seed / 10) % 2 === 0;
   const thirdQuest: DailyQuest = rotateCharacter
-    ? { id: `character-${mission.id}`, title: `${mission.name} ile 2 maç oyna`, kind: 'character', characterId: mission.id, goal: 2, progress: 0, rewardXp: 35, claimed: false }
-    : { id: 'special-uses', title: '3 özel yetenek kullan', kind: 'specials', goal: 3, progress: 0, rewardXp: 35, claimed: false };
+    ? { id: `character-${mission.id}`, title: `Play 2 matches with ${mission.name}`, kind: 'character', characterId: mission.id, goal: 2, progress: 0, rewardXp: 35, claimed: false }
+    : { id: 'special-uses', title: 'Use 3 special abilities', kind: 'specials', goal: 3, progress: 0, rewardXp: 35, claimed: false };
 
   return [
-    { id: 'matches-3', title: '3 maç tamamla', kind: 'matches', goal: 3, progress: 0, rewardXp: 30, claimed: false },
-    { id: 'win-1', title: '1 maç kazan', kind: 'wins', goal: 1, progress: 0, rewardXp: 40, claimed: false },
+    { id: 'matches-3', title: 'Complete 3 matches', kind: 'matches', goal: 3, progress: 0, rewardXp: 30, claimed: false },
+    { id: 'win-1', title: 'Win 1 match', kind: 'wins', goal: 1, progress: 0, rewardXp: 40, claimed: false },
     thirdQuest,
   ];
 }

@@ -73,14 +73,14 @@ export async function completeXConnection(): Promise<{ profile: XProfile | null;
   sessionStorage.removeItem(VERIFIER_KEY);
   window.history.replaceState({}, document.title, `${window.location.pathname}${window.location.hash}`);
 
-  if (oauthError) return { profile: null, error: 'X bağlantı isteği tamamlanmadı.', handled: true };
+  if (oauthError) return { profile: null, error: 'The X sign-in request was not completed.', handled: true };
   if (!code || !returnedState || !expectedState || returnedState !== expectedState || !verifier) {
-    return { profile: null, error: 'X bağlantısı doğrulanamadı. Lütfen yeniden deneyin.', handled: true };
+    return { profile: null, error: 'X sign-in could not be verified. Please try again.', handled: true };
   }
 
   try {
     const clientId = import.meta.env.VITE_X_CLIENT_ID?.trim();
-    if (!clientId) throw new Error('X Client ID yapılandırılmamış.');
+    if (!clientId) throw new Error('The X Client ID is not configured.');
     const tokenResponse = await fetch('https://api.x.com/2/oauth2/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -92,23 +92,23 @@ export async function completeXConnection(): Promise<{ profile: XProfile | null;
         client_id: clientId,
       }),
     });
-    if (!tokenResponse.ok) throw new Error('X erişim anahtarı alınamadı. Callback adresini ve OAuth ayarlarını kontrol edin.');
+    if (!tokenResponse.ok) throw new Error('Could not retrieve the X access token. Check your callback URL and OAuth settings.');
     const tokenData = await tokenResponse.json() as { access_token?: string };
-    if (!tokenData.access_token) throw new Error('X erişim anahtarı yanıtı eksik.');
+    if (!tokenData.access_token) throw new Error('The X access token response is incomplete.');
 
     const profileResponse = await fetch('https://api.x.com/2/users/me?user.fields=profile_image_url', {
       headers: { Authorization: `Bearer ${tokenData.access_token}` },
     });
-    if (!profileResponse.ok) throw new Error('X profil bilgisi okunamadı. Uygulamada users.read iznini etkinleştirin.');
+    if (!profileResponse.ok) throw new Error('Could not read your X profile. Enable the users.read permission in your app.');
     const profileData = await profileResponse.json() as { data?: XProfile };
-    if (!profileData.data?.id || !profileData.data.username) throw new Error('X profil yanıtı geçersiz.');
+    if (!profileData.data?.id || !profileData.data.username) throw new Error('The X profile response is invalid.');
     sessionStorage.setItem(TOKEN_KEY, tokenData.access_token);
     sessionStorage.setItem(PROFILE_KEY, JSON.stringify(profileData.data));
     return { profile: profileData.data, error: null, handled: true };
   } catch (error) {
     sessionStorage.removeItem(TOKEN_KEY);
     sessionStorage.removeItem(PROFILE_KEY);
-    return { profile: null, error: error instanceof Error ? error.message : 'X bağlantısı kurulamadı.', handled: true };
+    return { profile: null, error: error instanceof Error ? error.message : 'Could not connect to X.', handled: true };
   }
 }
 
