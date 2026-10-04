@@ -1,8 +1,8 @@
-# Agent Arena — Oyun Tasarım Taslağı
+# Xencoz — Oyun Tasarım Taslağı
 
 ## 1. Oyun özeti
 
-Agent Arena, böcek ve uzaylı temalı sekiz karakterin kısa, turlu maçlarda karşılaştığı bir arena oyunudur. Her karakterin temel saldırısı, savunması ve bekleme süresi olan bir özel yeteneği bulunur. Maçlar önce deterministik oyun kurallarıyla çalışır; ajan kişilikleri anlatımı ve karar tercihlerini etkiler, sonuçları keyfî biçimde değiştirmez.
+Xencoz, böcek ve uzaylı temalı sekiz karakterin kısa, turlu maçlarda karşılaştığı bir arena oyunudur. Her karakterin temel saldırısı, savunması ve bekleme süresi olan bir özel yeteneği bulunur. Maçlar önce deterministik oyun kurallarıyla çalışır; ajan kişilikleri anlatımı ve karar tercihlerini etkiler, sonuçları keyfî biçimde değiştirmez.
 
 ## 2. Temel savaş kuralları
 
@@ -120,7 +120,7 @@ Agent Arena, böcek ve uzaylı temalı sekiz karakterin kısa, turlu maçlarda k
 
 İlk sürüm ücretsiz ve zincir dışı oyun prototipidir. `$ARENA` henüz oyuna bağlı token değildir; cüzdan, kontrat, ödül havuzu, bahis, staking, buyback veya burn entegrasyonu yoktur. Maç sonucu oyun motorunda belirlenir. Ücretli stat güçlendirmesi planlanmaz; bütün karakterler aynı rekabet kurallarına tabidir.
 
-Ponsfamily, token başlatma ve alım satım arayüzü olarak ele alınır. Resmî belgelerde Pons V1, Robinhood Chain üzerinde (chain ID 4663) Uniswap V3 havuzu ve WETH ile tanımlanır. Belgelenen V1 varsayımları sabit arzlı token lansmanıdır. Ayrı Pons V2 akışı bonding curve ve Uniswap V4 havuzu tarif eder; V2 kuralları V1'e veya Agent Arena'ya otomatik olarak uygulanmaz. Agent Arena ile Ponsfamily arasında resmî ortaklık veya ürün entegrasyonu olduğu iddia edilmez.
+Ponsfamily, token başlatma ve alım satım arayüzü olarak ele alınır. Resmî belgelerde Pons V1, Robinhood Chain üzerinde (chain ID 4663) Uniswap V3 havuzu ve WETH ile tanımlanır. Belgelenen V1 varsayımları sabit arzlı token lansmanıdır. Ayrı Pons V2 akışı bonding curve ve Uniswap V4 havuzu tarif eder; V2 kuralları V1'e veya Xencoz'ya otomatik olarak uygulanmaz. Xencoz ile Ponsfamily arasında resmî ortaklık veya ürün entegrasyonu olduğu iddia edilmez.
 
 ### `$ARENA` için önerilen fayda planı
 
@@ -135,7 +135,7 @@ Token sahipliği tek başına saldırı, savunma, hız, can veya özel yetenek a
 
 ### Entegrasyon için gerekenler
 
-Token adresi, ağ, dağıtım, sözleşmeler ve turnuva ödül kuralları kesinleşmeden uygulama cüzdandan işlem imzalamaz ve token faydalarını canlıymış gibi göstermez. Zincir üstü bilet veya koleksiyon eklenirse bunun için Agent Arena'ya özel sözleşme ve servisler gerekir; Pons'un token lansmanı tek başına oyun içi faydaları sağlamaz. Arz ve token dağılımı karara bağlanana kadar taslak olarak kalır.
+Token adresi, ağ, dağıtım, sözleşmeler ve turnuva ödül kuralları kesinleşmeden uygulama cüzdandan işlem imzalamaz ve token faydalarını canlıymış gibi göstermez. Zincir üstü bilet veya koleksiyon eklenirse bunun için Xencoz'ya özel sözleşme ve servisler gerekir; Pons'un token lansmanı tek başına oyun içi faydaları sağlamaz. Arz ve token dağılımı karara bağlanana kadar taslak olarak kalır.
 ## 7. İlk sürüm kapsamı
 
 1. Sekiz karakter ve stat tablosu

@@ -1,11 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { enemyTurn, playerAction, startBattle } from './game';
-import { achievements, getAchievementProgress, getLevelProgress, getMasteryLevel, getSeasonDay, getXProfileStorageKey, readArenaProfile, recordFinishedMatch, refreshArenaProfile } from './progression';
+import { achievements, getAchievementProgress, getLevelProgress, getMasteryLevel, getSeasonDay, getWalletProfileStorageKey, readArenaProfile, recordFinishedMatch, refreshArenaProfile } from './progression';
 import { roster } from './roster';
 import type { ArenaProfile, MatchProgressResult } from './progression';
 import type { Battle, BotDifficulty, Character, Combatant } from './types';
-import { beginXConnection, completeXConnection, disconnectX, readXProfile } from './xAuth';
-import type { XProfile } from './xAuth';
+import { connectWallet, getWalletProvider, shortenWalletAddress } from './wallet';
 
 function Stats({ character }: { character: Character }) {
   return <div className="stats">{[
@@ -57,13 +56,13 @@ function FighterPanel({ fighter, right = false }: { fighter: Combatant; right?: 
 }
 
 function ProgressDashboard({ profile, enabled, onConnect }: { profile: ArenaProfile; enabled: boolean; onConnect: () => void }) {
-  if (!enabled) return <section className="progress-lock" aria-label="Progress locked">
-    <div className="lock-mark" aria-hidden="true">X</div><div><span className="progress-card-label">PLAYER PROGRESSION LOCKED</span><h2>Unlock quests and achievements</h2><p>XP, daily quests, seasons, and achievements advance only after you connect your X profile. Matches played before connecting do not count retroactively.</p></div><button className="btn" onClick={onConnect}>Connect X profile</button>
-  </section>;
   const level = getLevelProgress(profile.totalXp);
   const seasonDay = getSeasonDay(profile.season);
   const unlockedCount = profile.achievements.length;
   return <>
+  {!enabled && <section className="progress-lock" aria-label="Progress locked">
+    <div className="lock-mark" aria-hidden="true">◆</div><div><span className="progress-card-label">PLAYER PROGRESSION LOCKED</span><h2>Connect a wallet to unlock progression</h2><p>Connect MetaMask or a hardware wallet managed through MetaMask before starting a match. Your wallet address identifies your local profile; the app never asks for your seed phrase or private key.</p></div><button className="btn" onClick={onConnect}>Connect wallet</button>
+  </section>}
     <section className="progress-dashboard" aria-label="Player progression">
       <article className="progress-card level-card">
         <div className="progress-card-label">ARENA LEVEL</div>
@@ -73,7 +72,7 @@ function ProgressDashboard({ profile, enabled, onConnect }: { profile: ArenaProf
         <p>Every match earns XP, with small bonuses for wins, quick matches, and streaks.</p>
       </article>
       <article className="progress-card quest-card">
-        <div className="progress-card-label">TODAY’S QUESTS <span>RESET AT MIDNIGHT</span></div>
+        <div className="progress-card-label">TODAY’S QUESTS <span>{enabled ? 'RESET AT MIDNIGHT' : 'CONNECT WALLET TO TRACK'}</span></div>
         <div className="quest-list">{profile.dailyQuests.map((quest) => <div className={`quest-row${quest.claimed ? ' complete' : ''}`} key={quest.id}>
           <div className="quest-copy"><span>{quest.claimed ? '✓' : '○'} {quest.title}</span><small>{quest.progress}/{quest.goal} · +{quest.rewardXp} XP</small></div>
           <div className="quest-track"><div style={{ width: `${Math.min(100, (quest.progress / quest.goal) * 100)}%` }} /></div>
@@ -89,7 +88,7 @@ function ProgressDashboard({ profile, enabled, onConnect }: { profile: ArenaProf
         <div className="season-foot"><span>{profile.season.xp} SEASON XP</span><span>{profile.seasonBadges.length} BADGES</span></div>
       </article>
     </section>
-    <details className="profile-details">
+    <details className="profile-details" open>
       <summary>PROFILE, MASTERY, ACHIEVEMENTS & MATCH HISTORY <span>{unlockedCount}/{achievements.length} UNLOCKED</span></summary>
       <div className="profile-inner">
         <div className="profile-statline"><span>{profile.totalMatches} total matches</span><span>{profile.wins} wins</span><span>{profile.losses} losses</span><span>{profile.draws} draws</span><span>{profile.bestWinStreak} best streak</span></div>
@@ -124,13 +123,10 @@ export default function App() {
   const [resolving, setResolving] = useState(false);
   const [selectionError, setSelectionError] = useState('');
   const [difficulty, setDifficulty] = useState<BotDifficulty>('standard');
-  const [xProfile, setXProfile] = useState<XProfile | null>(readXProfile);
-  const [profile, setProfile] = useState<ArenaProfile>(() => {
-    const linkedProfile = readXProfile();
-    return linkedProfile ? readArenaProfile(getXProfileStorageKey(linkedProfile.id)) : readArenaProfile();
-  });
+  const [walletAddress, setWalletAddress] = useState<string | null>(null);
+  const [profile, setProfile] = useState<ArenaProfile>(() => readArenaProfile());
   const [matchProgress, setMatchProgress] = useState<MatchProgressResult | null>(null);
-  const [xNotice, setXNotice] = useState('');
+  const [walletNotice, setWalletNotice] = useState('');
   const timer = useRef<number | null>(null);
   const recordedBattle = useRef(false);
   const progressEligible = useRef(false);
@@ -138,13 +134,17 @@ export default function App() {
   useEffect(() => () => { if (timer.current !== null) window.clearTimeout(timer.current); }, []);
 
   useEffect(() => {
-    void completeXConnection().then((result) => {
-      setXProfile(result.profile);
-      if (result.profile) setProfile(readArenaProfile(getXProfileStorageKey(result.profile.id)));
-      if (result.handled && result.error) setXNotice(result.error);
-      else if (result.handled && result.profile) setXNotice(`X profile @${result.profile.username} connected.`);
-    });
-  }, []);
+    if (!walletAddress) return;
+    const provider = getWalletProvider();
+    const syncAccounts = (accounts: string[]) => {
+      const account = accounts[0] ?? null;
+      setWalletAddress(account);
+      if (account) setProfile(readArenaProfile(getWalletProfileStorageKey(account)));
+      progressEligible.current = false;
+    };
+    provider?.on?.('accountsChanged', syncAccounts);
+    return () => provider?.removeListener?.('accountsChanged', syncAccounts);
+  }, [walletAddress]);
 
   useEffect(() => {
     const now = new Date();
@@ -154,17 +154,17 @@ export default function App() {
   }, [profile.dailyDate]);
 
   useEffect(() => {
-    if (!xProfile) return;
-    try { localStorage.setItem(getXProfileStorageKey(xProfile.id), JSON.stringify(profile)); } catch { /* Storage may be unavailable in private browsing. */ }
-  }, [profile, xProfile]);
+    if (!walletAddress) return;
+    try { localStorage.setItem(getWalletProfileStorageKey(walletAddress), JSON.stringify(profile)); } catch { /* Storage may be unavailable in private browsing. */ }
+  }, [profile, walletAddress]);
 
   useEffect(() => {
-    if (!battle?.finished || recordedBattle.current || !xProfile || !progressEligible.current) return;
+    if (!battle?.finished || recordedBattle.current || !walletAddress || !progressEligible.current) return;
     recordedBattle.current = true;
     const result = recordFinishedMatch(profile, battle);
     setProfile(result.profile);
     setMatchProgress(result);
-  }, [battle, profile, xProfile]);
+  }, [battle, profile, walletAddress]);
 
   const queueEnemyTurn = (advanceRound = true) => {
     setResolving(true);
@@ -181,7 +181,7 @@ export default function App() {
     }
     setSelectionError('');
     recordedBattle.current = false;
-    progressEligible.current = Boolean(xProfile);
+    progressEligible.current = Boolean(walletAddress);
     const initial = startBattle(player, enemy, difficulty);
     setBattle(initial);
     if (!initial.playerFirst) queueEnemyTurn(false);
@@ -205,19 +205,20 @@ export default function App() {
   };
 
   const specialReady = battle?.player.cooldownLeft === 0 && !battle?.finished && !resolving;
-  const handleXButton = async () => {
-    if (xProfile) {
-      disconnectX();
-      setXProfile(null);
+  const handleWalletButton = async () => {
+    if (walletAddress) {
+      setWalletAddress(null);
       progressEligible.current = false;
-      setXNotice('X profile disconnected for this session.');
+      setWalletNotice('Wallet disconnected from this app. To revoke site access, manage connected sites in MetaMask.');
       return;
     }
     try {
-      const result = await beginXConnection();
-      if (!result.ok) setXNotice('An X Developer OAuth 2.0 Client ID is required to connect your profile. Redirecting to a regular X page does not link your account.');
-    } catch {
-      setXNotice('Could not start X sign-in. Your browser must support secure connections.');
+      const address = await connectWallet();
+      setWalletAddress(address);
+      setProfile(readArenaProfile(getWalletProfileStorageKey(address)));
+      setWalletNotice(`Wallet ${shortenWalletAddress(address)} connected.`);
+    } catch (error) {
+      setWalletNotice(error instanceof Error ? error.message : 'Could not connect to MetaMask.');
     }
   };
   const buildXShareUrl = (text: string) => {
@@ -226,7 +227,7 @@ export default function App() {
     return `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}${pageUrl}`;
   };
   const victoryShareUrl = battle?.winnerSide === 'player' ? buildXShareUrl([
-    'VICTORY · AGENT ARENA',
+    'VICTORY · XENCOZ',
     `${battle.player.name} defeated ${battle.enemy.name}`,
     `Damage dealt: ${Math.round((battle.enemy.hp - battle.enemy.currentHp) * 10) / 10}`,
     `Turns: ${battle.round}`,
@@ -234,11 +235,11 @@ export default function App() {
   ].join('\n')) : null;
 
   return <main className="shell">
-    <header className="top"><div className="brand"><img className="brand-logo" src="/images/agent-arena-logo.jpg" alt="" /><span>Agent Arena</span></div><div className="top-actions"><button className={`x-button x-connect${xProfile ? ' connected' : ''}`} onClick={() => void handleXButton()} aria-label={xProfile ? `Connected as @${xProfile.username}. Click to disconnect.` : 'Connect your X profile'}>{xProfile?.profile_image_url ? <img className="x-avatar" src={xProfile.profile_image_url} alt="" /> : <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.9 2H22l-6.8 7.8L23.2 22h-6.3L12 14.6 5.5 22H2.4l7.3-8.4L1.9 2h6.5l4.5 6.7L18.9 2Zm-1.1 18h1.7L7.4 3.9H5.6L17.8 20Z" /></svg>}<span>{xProfile ? `@${xProfile.username} · Connected` : 'Connect X'}</span></button><div className="pill">GAME PROTOTYPE · LOCAL PROFILE</div></div></header>
-    {xNotice && <div className="x-notice" role="status"><span>{xNotice}</span><button aria-label="Dismiss notification" onClick={() => setXNotice('')}>×</button></div>}
+    <header className="top"><div className="brand"><img className="brand-logo" src="/images/xencoz-logo.jpg" alt="" /><span>Xencoz</span></div><div className="top-actions"><button className={`x-button wallet-connect${walletAddress ? ' connected' : ''}`} onClick={() => void handleWalletButton()} aria-label={walletAddress ? `Connected wallet ${walletAddress}. Click to disconnect from this app.` : 'Connect MetaMask wallet'}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 6.5A2.5 2.5 0 0 1 5.5 4h13A2.5 2.5 0 0 1 21 6.5v2.1h-3.2a3.4 3.4 0 0 0 0 6.8H21v2.1a2.5 2.5 0 0 1-2.5 2.5h-13A2.5 2.5 0 0 1 3 17.5v-11Zm14.8 4a1.5 1.5 0 0 0 0 3H21v-3h-3.2Z" /></svg><span>{walletAddress ? shortenWalletAddress(walletAddress) : 'Connect MetaMask'}</span></button></div></header>
+    {walletNotice && <div className="wallet-notice" role="status"><span>{walletNotice}</span><button aria-label="Dismiss notification" onClick={() => setWalletNotice('')}>×</button></div>}
     <section className="hero"><div><div className="eyebrow">Insects vs. aliens</div><h1>WELCOME TO<br />THE ARENA.</h1><p>Choose your fighter. Pick your rival. Start the battle.</p></div><div className="arena-tag">SEASON {String(profile.season.number).padStart(2, '0')}<br />8 FIGHTERS · 1 ARENA</div></section>
 
-    <ProgressDashboard profile={profile} enabled={Boolean(xProfile)} onConnect={() => void handleXButton()} />
+    <ProgressDashboard profile={profile} enabled={Boolean(walletAddress)} onConnect={() => void handleWalletButton()} />
 
     {!battle ? <>
       <section className="setup" aria-label="Fighter selection">
@@ -284,10 +285,10 @@ export default function App() {
         <article className="utility-card"><span className="utility-index">04 / COLLECT</span><h3>Collect achievements</h3><p>Complete long-term goals to unlock profile titles and seasonal badges.</p><span className="utility-status">PROFILE REWARDS</span></article>
         <article className="utility-card"><span className="utility-index">05 / COMPETE</span><h3>Complete the season</h3><p>Build your wins and streak during a 30-day local season, then share victories on X.</p><span className="utility-status">BOT MATCHES</span></article>
       </div>
-      <p className="utility-note">XP, mastery, and badges are in-game progression only and never affect combat stats. Your profile is stored in this browser. This prototype has no token, wallet, betting, staking, or PvP against real players.</p>
+      <p className="utility-note">XP, mastery, and badges are in-game progression only and never affect combat stats. Your profile is stored in this browser and keyed to your connected wallet address. This prototype has no on-chain token, betting, staking, or PvP against real players.</p>
     </section>
     <section className="thesis" aria-labelledby="thesis-title">
-      <div className="thesis-heading"><div><div className="eyebrow">THE PROJECT THESIS</div><h2 id="thesis-title">Why Agent Arena?</h2></div><p>A quick-to-play arena for players, with room to grow into a broader game and community for its supporters.</p></div>
+      <div className="thesis-heading"><div><div className="eyebrow">THE PROJECT THESIS</div><h2 id="thesis-title">Why Xencoz?</h2></div><p>A quick-to-play arena for players, with room to grow into a broader game and community for its supporters.</p></div>
       <div className="thesis-grid">
         <article className="thesis-card"><span>01 / PLAYABLE PRODUCT</span><h3>Game first, economy later</h3><p>Eight distinct fighters, tactical abilities, and short turn-based matches. The core loop works without a token connection.</p></article>
         <article className="thesis-card"><span>02 / GROWTH THESIS</span><h3>Room to grow and replay</h3><p>Seasons, new fighters, tournaments, and cosmetic collections offer paths to expand. Demand and revenue have not been proven.</p></article>
@@ -295,6 +296,6 @@ export default function App() {
       </div>
       <div className="thesis-disclosure"><b>Current stage: prototype.</b><span>There is no token launch, funding round, or promise of returns. Economy and integration concepts are plans; there is no finished product or verified token information on which to base an investment decision.</span></div>
     </section>
-    <footer className="foot"><span>AGENT ARENA · GAMEPLAY PROTOTYPE</span><span>EVERY MATCH TELLS A NEW STORY</span></footer>
+    <footer className="foot"><span>XENCOZ · GAMEPLAY PROTOTYPE</span><span>EVERY MATCH TELLS A NEW STORY</span></footer>
   </main>;
 }

@@ -1,8 +1,8 @@
 import type { Battle } from './types';
 
 export const PROFILE_KEY = 'arenaProfile-v1';
-export function getXProfileStorageKey(xUserId: string) {
-  return `${PROFILE_KEY}-x-${xUserId.replace(/[^a-zA-Z0-9_-]/g, '')}`;
+export function getWalletProfileStorageKey(walletAddress: string) {
+  return `${PROFILE_KEY}-wallet-${walletAddress.toLowerCase().replace(/[^a-z0-9_-]/g, '')}`;
 }
 const LEGACY_CAREER_KEY = 'agent-arena-career-v1';
 const SEASON_LENGTH_DAYS = 30;
